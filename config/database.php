@@ -86,7 +86,7 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => null,
+            'url' => env('DB_URL', env('DATABASE_URL')),
             'host' => implode(';', array_filter([
                 env('DB_USE_POOLER', false)
                     ? env('DB_HOST', '127.0.0.1')
