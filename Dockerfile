@@ -1,30 +1,23 @@
-FROM php:8.2-fpm-alpine AS base
-
-RUN apk add --no-cache \
-    bash \
-    curl \
-    icu-dev \
-    libpng-dev \
-    libzip-dev \
-    nginx \
-    oniguruma-dev \
-    postgresql-dev \
-    unzip \
-    zip \
-    && docker-php-ext-install intl mbstring opcache pcntl pdo_pgsql zip
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+FROM php:8.2-cli
 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libpq-dev \
+    libzip-dev \
+    && docker-php-ext-install pdo_pgsql zip
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . .
 
-RUN composer dump-autoload --optimize \
-    && chown -R www-data:www-data storage bootstrap/cache
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-EXPOSE 9000
+RUN mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-CMD ["php-fpm"]
+EXPOSE 8000
+
+CMD ["sh", "-c", "php artisan key:generate --force || true && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
