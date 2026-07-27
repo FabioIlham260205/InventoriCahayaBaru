@@ -43,15 +43,6 @@ RUN mkdir -p storage/framework/cache \
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache
 
-# Railway port
-EXPOSE 8000
+EXPOSE 9000
 
-# Start Laravel
-CMD sh -c "\
-php artisan config:clear && \
-php artisan cache:clear && \
-php artisan route:clear && \
-php artisan view:clear && \
-php artisan migrate --force && \
-php artisan storage:link || true && \
-php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"
+CMD ["php-fpm"]
